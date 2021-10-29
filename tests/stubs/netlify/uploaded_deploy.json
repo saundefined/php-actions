@@ -1,0 +1,38 @@
+{
+    "id": "string",
+    "site_id": "string",
+    "user_id": "string",
+    "build_id": "string",
+    "state": "string",
+    "name": "string",
+    "url": "string",
+    "ssl_url": "string",
+    "admin_url": "string",
+    "deploy_url": "string",
+    "deploy_ssl_url": "string",
+    "screenshot_url": "string",
+    "review_id": 0,
+    "draft": true,
+    "required": [
+        "string"
+    ],
+    "required_functions": [
+        "string"
+    ],
+    "error_message": "string",
+    "branch": "string",
+    "commit_ref": "string",
+    "commit_url": "string",
+    "skipped": true,
+    "created_at": "string",
+    "updated_at": "string",
+    "published_at": "string",
+    "title": "string",
+    "context": "string",
+    "locked": true,
+    "review_url": "string",
+    "site_capabilities": {
+        "large_media_enabled": true
+    },
+    "framework": "string"
+}

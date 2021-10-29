@@ -1,0 +1,36 @@
+name: "build"
+
+on: [ "pull_request", "push" ]
+
+env:
+  XDEBUG_MODE: coverage
+
+jobs:
+  coding-standards:
+    name: "Coding standards"
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Checkout repository"
+        uses: "actions/checkout@v2"
+
+      - name: "Install dependencies"
+        run: "composer install --no-ansi --no-interaction --no-scripts --no-suggest --no-progress --prefer-dist"
+
+      - name: "Validate syntax"
+        run: "./vendor/bin/phpcs --standard=PSR12 src/"
+
+  code-coverage:
+    name: "Code coverage"
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Checkout repository"
+        uses: "actions/checkout@v2"
+
+      - name: "Install dependencies"
+        run: "composer install --no-ansi --no-interaction --no-scripts --no-suggest --no-progress --prefer-dist"
+
+      - name: "Run tests"
+        run: "./vendor/bin/phpunit --coverage-clover=coverage.xml"
+
+      - name: "Publish coverage report to Codecov"
+        uses: "codecov/codecov-action@v1"

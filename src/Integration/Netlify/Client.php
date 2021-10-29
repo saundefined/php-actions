@@ -4,14 +4,24 @@ namespace PHP\Actions\Integration\Netlify;
 
 use RuntimeException;
 use Symfony\Component\HttpClient\HttpClient;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class Client
 {
     protected string $token;
 
+    protected HttpClientInterface $httpClient;
+
     public function __construct($token)
     {
         $this->token = $token;
+
+        $this->httpClient = HttpClient::create();
+    }
+
+    public function setHttpClient(HttpClientInterface $httpClient)
+    {
+        $this->httpClient = $httpClient;
     }
 
     public function request($endpoint, $body = null, $httpMethod = 'GET', $headers = [])
@@ -27,7 +37,7 @@ class Client
             $options['body'] = $body;
         }
 
-        $response = HttpClient::create()
+        $response = $this->httpClient
             ->request(
                 $httpMethod,
                 'https://api.netlify.com/api/v1/' . $endpoint,

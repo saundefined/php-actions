@@ -19,6 +19,18 @@ class DeployDocumentationBuildToNetlify extends Command
 {
     protected static $defaultName = 'documentation:deploy';
 
+    protected ?GitHubClient $github = null;
+
+    protected ?NetlifyClient $netlify = null;
+
+    public function __construct(string $name = null, GitHubClient $github = null, NetlifyClient $netlify = null)
+    {
+        parent::__construct($name);
+
+        $this->github = $github;
+        $this->netlify = $netlify;
+    }
+
     protected function configure()
     {
         $this
@@ -86,27 +98,31 @@ class DeployDocumentationBuildToNetlify extends Command
             Assert::notEmpty($netlifySite, 'Option `netlify-site` is not specified.');
             Assert::notEmpty($netlifyToken, 'Option `netlify-token` is not specified.');
             Assert::notEmpty($repository, 'Option `repository` is not specified.');
-            Assert::numeric($issueId, 'Option `issue` is numeric.');
+            Assert::numeric($issueId, 'Option `issue` is not a numeric.');
             Assert::notEmpty($gitHubToken, 'Option `github-token` is not specified.');
             Assert::notEmpty($commitHash, 'Option `commit` is not specified.');
 
             $output->writeln('Assertions passed successfully');
 
-            $gitHubClient = new GitHubClient($gitHubToken);
+            if ($this->github === null) {
+                $this->github = new GitHubClient($gitHubToken);
+            }
 
-            $issue = new Issue($gitHubClient, $repository);
+            if ($this->netlify === null) {
+                $this->netlify = new NetlifyClient($netlifyToken);
+            }
+
+            $issue = new Issue($this->github, $repository);
             $issue->get($issueId);
 
             $output->writeln('Issue exist');
 
-            $commit = new Commit($gitHubClient, $repository);
+            $commit = new Commit($this->github, $repository);
             $commit->get($commitHash);
 
             $output->writeln('Commit exist');
 
-            $netlifyClient = new NetlifyClient($netlifyToken);
-
-            $deploy = new Deploy($netlifyClient, $netlifySite);
+            $deploy = new Deploy($this->netlify, $netlifySite);
             $response = $deploy->create($issueId);
 
             $output->writeln('Netlify deploy created');
@@ -120,7 +136,7 @@ class DeployDocumentationBuildToNetlify extends Command
 
             $output->writeln('GitHub comment posted');
 
-            $deployment = new Deployment($gitHubClient, $repository);
+            $deployment = new Deployment($this->github, $repository);
             $response = $deployment->create($commitHash);
 
             $output->writeln('GitHub deployment created');

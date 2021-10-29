@@ -24,6 +24,10 @@ class Issue
             'body' => $body
         ], JSON_THROW_ON_ERROR);
 
-        return $this->client->request('repos/' . $this->repository . '/issues/' . $issueId . '/comments', $body, 'POST');
+        return $this->client->request(
+            'repos/' . $this->repository . '/issues/' . $issueId . '/comments',
+            $body,
+            'POST'
+        );
     }
 }
