@@ -9,10 +9,13 @@ use PHP\Actions\Integration\Netlify\Client;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
+use ZipArchive;
 
 class Deploy extends TestCase
 {
     protected Client $client;
+
+    protected string $zipFile;
 
     /** @test */
     public function it_should_return_created_deploy(): void
@@ -41,7 +44,7 @@ class Deploy extends TestCase
         $this->client->setHttpClient(new MockHttpClient($mockResponse, 'https://api.netlify.com'));
 
         $deploy = new \PHP\Actions\Integration\Netlify\Deploy($this->client, 'php-doc.netlify.app');
-        $response = $deploy->upload('deployment-id', __DIR__ . '/../../stubs/files/sample.zip');
+        $response = $deploy->upload('deployment-id', $this->zipFile);
 
         $this->assertArrayHasKey('id', $response);
     }
@@ -65,7 +68,8 @@ class Deploy extends TestCase
     /** @test */
     public function it_should_return_exception_on_empty_response(): void
     {
-        $mockResponse = new MockResponse('',
+        $mockResponse = new MockResponse(
+            '',
             ['http_code' => 404]
         );
 
@@ -82,5 +86,20 @@ class Deploy extends TestCase
         parent::setUp();
 
         $this->client = new Client('test-token');
+
+        $this->zipFile = tempnam(sys_get_temp_dir(), 'temp');
+        rename($this->zipFile, $this->zipFile .= '.zip');
+
+        $zip = new ZipArchive();
+        $zip->open($this->zipFile, ZipArchive::OVERWRITE);
+        $zip->addFile(__DIR__ . '/../../stubs/netlify/uploaded_deploy.json');
+        $zip->close();
+    }
+
+    protected function tearDown(): void
+    {
+        parent::tearDown();
+
+        unlink($this->zipFile);
     }
 }

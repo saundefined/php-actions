@@ -10,10 +10,13 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
+use ZipArchive;
 
 class DeployDocumentationBuildToNetlify extends TestCase
 {
     protected CommandTester $command;
+
+    protected string $zipFile;
 
     /** @test */
     public function it_should_return_error_not_file()
@@ -41,7 +44,7 @@ class DeployDocumentationBuildToNetlify extends TestCase
     public function it_should_return_error_not_netlify_site()
     {
         $this->command->execute([
-            '--file' => __DIR__ . '/../stubs/files/sample.zip'
+            '--file' => $this->zipFile
         ]);
         $this->assertEquals(
             implode(PHP_EOL, ['Started...', 'Option `netlify-site` is not specified.']),
@@ -53,7 +56,7 @@ class DeployDocumentationBuildToNetlify extends TestCase
     public function it_should_return_error_not_netlify_token()
     {
         $this->command->execute([
-            '--file' => __DIR__ . '/../stubs/files/sample.zip',
+            '--file' => $this->zipFile,
             '--netlify-site' => 'netlify-site',
         ]);
         $this->assertEquals(
@@ -66,7 +69,7 @@ class DeployDocumentationBuildToNetlify extends TestCase
     public function it_should_return_error_not_repository()
     {
         $this->command->execute([
-            '--file' => __DIR__ . '/../stubs/files/sample.zip',
+            '--file' => $this->zipFile,
             '--netlify-site' => 'netlify-site',
             '--netlify-token' => 'netlify-token',
         ]);
@@ -80,7 +83,7 @@ class DeployDocumentationBuildToNetlify extends TestCase
     public function it_should_return_error_not_issue()
     {
         $this->command->execute([
-            '--file' => __DIR__ . '/../stubs/files/sample.zip',
+            '--file' => $this->zipFile,
             '--netlify-site' => 'netlify-site',
             '--netlify-token' => 'netlify-token',
             '--repository' => 'repository/name',
@@ -95,7 +98,7 @@ class DeployDocumentationBuildToNetlify extends TestCase
     public function it_should_return_error_not_github_token()
     {
         $this->command->execute([
-            '--file' => __DIR__ . '/../stubs/files/sample.zip',
+            '--file' => $this->zipFile,
             '--netlify-site' => 'netlify-site',
             '--netlify-token' => 'netlify-token',
             '--repository' => 'repository/name',
@@ -111,7 +114,7 @@ class DeployDocumentationBuildToNetlify extends TestCase
     public function it_should_return_error_not_commit()
     {
         $this->command->execute([
-            '--file' => __DIR__ . '/../stubs/files/sample.zip',
+            '--file' => $this->zipFile,
             '--netlify-site' => 'netlify-site',
             '--netlify-token' => 'netlify-token',
             '--repository' => 'repository/name',
@@ -128,7 +131,7 @@ class DeployDocumentationBuildToNetlify extends TestCase
     public function it_should_test_a_command_workflow()
     {
         $this->command->execute([
-            '--file' => __DIR__ . '/../stubs/files/sample.zip',
+            '--file' => $this->zipFile,
             '--netlify-site' => 'netlify-site',
             '--netlify-token' => 'netlify-token',
             '--repository' => 'repository/name',
@@ -201,5 +204,20 @@ class DeployDocumentationBuildToNetlify extends TestCase
         $this->command = new CommandTester(
             new \PHP\Actions\Console\DeployDocumentationBuildToNetlify(null, $gitHubClient, $netlifyClient)
         );
+
+        $this->zipFile = tempnam(sys_get_temp_dir(), 'temp');
+        rename($this->zipFile, $this->zipFile .= '.zip');
+
+        $zip = new ZipArchive();
+        $zip->open($this->zipFile, ZipArchive::OVERWRITE);
+        $zip->addFile(__DIR__ . '/../stubs/netlify/uploaded_deploy.json');
+        $zip->close();
+    }
+
+    protected function tearDown(): void
+    {
+        parent::tearDown();
+
+        unlink($this->zipFile);
     }
 }
